@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="vi" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ĐSCT Bắc Nam — Góc Nhìn Đa Chủ Thể | Hiệp hội Hàng không</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,900;1,500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['-apple-system','BlinkMacSystemFont','Segoe UI','Roboto','sans-serif'],
+                        serif: ['Playfair Display','serif'],
+                        mono: ['DM Mono','monospace'],
+                    },
+                    colors: {
+                        forest: { dark:'#020617', deep:'#064e3b', mid:'#047857', light:'#10b981', neon:'#34d399' },
+                        moon: { glow:'#fef08a', core:'#ffffff', aura:'#fef9c3' }
+                    },
+                    animation: {
+                        'moon-rise': 'moonRise 3s cubic-bezier(0.2,0.8,0.2,1) forwards',
+                        'light-spread': 'lightSpread 4s ease forwards',
+                        'firefly': 'firefly 8s ease-in-out infinite alternate',
+                        'reveal-up': 'revealUp 1s cubic-bezier(0.16,1,0.3,1) forwards',
+                        'pulse-slow': 'pulse 3s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        moonRise: { '0%':{transform:'translateY(100px) scale(0.8)',opacity:'0',filter:'blur(20px)'},'100%':{transform:'translateY(0) scale(1)',opacity:'1',filter:'blur(0px)'} },
+                        lightSpread: { '0%':{opacity:'0',transform:'scale(0.5)'},'100%':{opacity:'1',transform:'scale(1.5)'} },
+                        firefly: { '0%':{transform:'translate(0,0) scale(1)',opacity:'0.2'},'50%':{transform:'translate(50px,-50px) scale(1.5)',opacity:'0.8'},'100%':{transform:'translate(-30px,-80px) scale(0.8)',opacity:'0.1'} },
+                        revealUp: { '0%':{opacity:'0',transform:'translateY(50px) scale(0.95)'},'100%':{opacity:'1',transform:'translateY(0) scale(1)'} }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color:#020617; color:#f8fafc; overflow-x:hidden; -webkit-font-smoothing:antialiased; }
+        #intro-overlay { position:fixed;inset:0;z-index:9999;background:#000;display:flex;justify-content:center;align-items:center;transition:opacity 2s ease-in-out;pointer-events:none; }
+        .ios-glass { background:rgba(15,23,42,0.4);backdrop-filter:blur(30px) saturate(150%);-webkit-backdrop-filter:blur(30px) saturate(150%);border:1px solid rgba(255,255,255,0.1);box-shadow:0 20px 40px -10px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.1);transition:all 0.4s cubic-bezier(0.2,0.8,0.2,1); }
+        .ios-glass:hover { background:rgba(30,41,59,0.5);border-color:rgba(52,211,153,0.3);box-shadow:0 30px 60px -15px rgba(16,185,129,0.3),inset 0 1px 0 rgba(255,255,255,0.2);transform:translateY(-4px) scale(1.01); }
+        .ios-btn { position:relative;overflow:hidden;transition:transform 0.2s cubic-bezier(0.2,0.8,0.2,1),box-shadow 0.2s; }
+        .ios-btn:active { transform:scale(0.96); }
+        .ios-btn::after { content:'';position:absolute;inset:0;background:linear-gradient(rgba(255,255,255,0.2),transparent);opacity:0;transition:opacity 0.3s; }
+        .ios-btn:hover::after { opacity:1; }
+        .text-gradient-moon { background:linear-gradient(135deg,#fef08a,#ffffff,#a7f3d0);-webkit-background-clip:text;-webkit-text-fill-color:transparent; }
+        .text-gradient-forest { background:linear-gradient(135deg,#34d399,#0ea5e9);-webkit-background-clip:text;-webkit-text-fill-color:transparent; }
+        .text-gradient-amber { background:linear-gradient(135deg,#fbbf24,#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent; }
+        .hero-scene { position:relative;width:100vw;height:100vh;overflow:hidden;perspective:1200px;background:radial-gradient(circle at center 60%,#064e3b 0%,#020617 70%); }
+        .moon-orb { position:absolute;top:15%;left:50%;margin-left:-100px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#ffffff,#fef08a,transparent);box-shadow:0 0 150px 50px rgba(254,240,138,0.4),0 0 300px 100px rgba(52,211,153,0.2);z-index:1;opacity:0; }
+        .light-beam { position:absolute;top:25%;left:50%;transform:translateX(-50%);width:150vw;height:100vh;background:radial-gradient(ellipse at top,rgba(254,240,138,0.15) 0%,transparent 70%);z-index:2;pointer-events:none;opacity:0;mix-blend-mode:screen; }
+        .parallax-layer { position:absolute;bottom:-5%;width:110vw;left:-5vw;display:flex;justify-content:center;align-items:flex-end;transform-style:preserve-3d;will-change:transform; }
+        .svg-tree { transform-origin:bottom center; }
+        .layer-bg { z-index:3;transform:translateZ(-400px) scale(1.5);filter:blur(4px) brightness(0.3); }
+        .layer-mid { z-index:4;transform:translateZ(-200px) scale(1.2);filter:blur(2px) brightness(0.5); }
+        .layer-front { z-index:5;transform:translateZ(0) scale(1);filter:drop-shadow(0 20px 30px rgba(0,0,0,0.8)); }
+        .firefly { position:absolute;border-radius:50%;background:#fef08a;box-shadow:0 0 10px 2px #fef08a;z-index:6;pointer-events:none; }
+        #scroll-progress { position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,#34d399,#fef08a);z-index:1000;width:0%;box-shadow:0 0 10px rgba(52,211,153,0.5); }
+        .reveal-node { opacity:0;visibility:hidden; }
+        .reveal-node.active { opacity:1;visibility:visible;animation:revealUp 0.8s cubic-bezier(0.16,1,0.3,1) forwards; }
+        .chart-container { position:relative;height:320px;width:100%; }
+        .premium-table { width:100%;border-collapse:separate;border-spacing:0; }
+        .premium-table th { background:rgba(255,255,255,0.03);color:#94a3b8;padding:14px 18px;text-align:left;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;border-bottom:1px solid rgba(255,255,255,0.1); }
+        .premium-table td { padding:14px 18px;border-bottom:1px solid rgba(255,255,255,0.05);transition:all 0.3s ease;color:#f8fafc;font-size:0.9rem; }
+        .premium-table tr:hover td { background:rgba(52,211,153,0.05);color:#34d399; }
+        .modal-overlay { position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);z-index:9999;display:flex;justify-content:center;align-items:center;opacity:0;pointer-events:none;transition:opacity 0.4s ease; }
+        .modal-overlay.active { opacity:1;pointer-events:auto; }
+        .modal-content { transform:scale(0.9) translateY(20px);opacity:0;transition:all 0.4s cubic-bezier(0.16,1,0.3,1); }
+        .modal-overlay.active .modal-content { transform:scale(1) translateY(0);opacity:1; }
+        ::-webkit-scrollbar { width:6px; }
+        ::-webkit-scrollbar-track { background:#020617; }
+        ::-webkit-scrollbar-thumb { background:#1e293b;border-radius:10px; }
+        ::-webkit-scrollbar-thumb:hover { background:#34d399; }
+        .badge-rank { display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:6px;font-size:0.7rem;font-weight:700;letter-spacing:0.05em; }
+        .badge-low { background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3); }
+        .badge-mid { background:rgba(96,165,250,0.15);color:#60a5fa;border:1px solid rgba(96,165,250,0.3); }
+        .badge-high { background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.3); }
+        .badge-top { background:rgba(254,240,138,0.15);color:#fef08a;border:1px solid rgba(254,240,138,0.3); }
+        .badge-vn { background:rgba(52,211,153,0.2);color:#34d399;border:1px solid rgba(52,211,153,0.4); }
+        .progress-bar { height:6px;border-radius:99px;background:rgba(255,255,255,0.08);overflow:hidden; }
+        .progress-fill { height:100%;border-radius:99px;transition:width 2s cubic-bezier(0.16,1,0.3,1); }
+        .section-divider { border:none;border-top:1px solid rgba(255,255,255,0.06);margin:0; }
+        .tab-btn { padding:8px 18px;border-radius:999px;font-size:0.8rem;font-weight:600;transition:all 0.3s;border:1px solid transparent;cursor:pointer; }
+        .tab-btn.active { background:rgba(52,211,153,0.2);color:#34d399;border-color:rgba(52,211,153,0.4); }
+        .tab-btn:not(.active) { color:#64748b; }
+        .tab-btn:not(.active):hover { color:#94a3b8; }
+        .tab-panel { display:none; }
+        .tab-panel.active { display:block; }
+    </style>
+</head>
+<body class="selection:bg-forest-neon selection:text-forest-dark">
+
+<div id="intro-overlay"></div>
+<div id="scroll-progress"></div>
+
+<!-- NAV -->
+<nav id="navbar" class="fixed w-full z-50 transition-all duration-500 py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="ios-glass rounded-[2rem] px-6 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-forest-neon to-forest-mid flex items-center justify-center shadow-[0_0_15px_rgba(52,211,153,0.4)]">
+                    <i class="fa-solid fa-plane-up text-forest-dark text-lg"></i>
+                </div>
+                <span class="font-serif font-bold text-xl text-white">Aero<span class="text-forest-neon">View</span></span>
+            </div>
+            <div class="hidden md:flex space-x-1">
+                <a href="#phan-1" class="px-4 py-2 rounded-full text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 transition-all">Lợi &amp; Bất lợi</a>
+                <a href="#phan-2" class="px-4 py-2 rounded-full text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 transition-all">Quốc Tế &amp; Tài Chính</a>
+                <a href="#phan-dan" class="px-4 py-2 rounded-full text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 transition-all">Tiếng Nói Người Dân</a>
+                <a href="#phan-3" class="px-4 py-2 rounded-full text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 transition-all">Chiến lược &amp; Đề xuất</a>
+                <a href="#ket-luan" class="px-4 py-2 rounded-full text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 transition-all">Kết luận</a>
+            </div>
+            <a href="#phan-1" class="ios-btn bg-white text-forest-dark px-5 py-2 rounded-full text-sm font-bold shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] hidden sm:flex items-center gap-2">
+                <i class="fa-solid fa-play"></i> Bắt đầu xem
+            </a>
+        </div>
+    </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero-scene" id="hero-parallax">
+    <div class="moon-orb animate-moon-rise" id="moon"></div>
+    <div class="light-beam animate-light-spread"></div>
+    <div class="parallax-layer layer-bg" data-speed="0.02">
+        <svg class="svg-tree opacity-40 mx-[-20px]" width="200" height="600" viewBox="0 0 100 300"><path d="M50 0 L100 150 L80 150 L100 250 L0 250 L20 150 L0 150 Z" fill="#022c22"/></svg>
+        <svg class="svg-tree opacity-50 mx-[-20px]" width="250" height="700" viewBox="0 0 100 300"><path d="M50 0 L100 150 L80 150 L100 250 L0 250 L20 150 L0 150 Z" fill="#064e3b"/></svg>
+        <svg class="svg-tree opacity-40 mx-[-20px]" width="180" height="550" viewBox="0 0 100 300"><path d="M50 0 L100 150 L80 150 L100 250 L0 250 L20 150 L0 150 Z" fill="#022c22"/></svg>
+        <svg class="svg-tree opacity-50 mx-[-20px]" width="300" height="650" viewBox="0 0 100 300"><path d="M50 0 L100 150 L80 150 L100 250 L0 250 L20 150 L0 150 Z" fill="#064e3b"/></svg>
+    </div>
+    <div class="parallax-layer layer-mid" data-speed="0.06">
+        <svg class="svg-tree mx-[30px]" width="300" height="400" viewBox="0 0 200 300"><path d="M100 20 C150 20 180 80 180 140 C180 200 130 250 100 250 C70 250 20 200 20 140 C20 80 50 20 100 20 Z" fill="#065f46"/><path d="M90 240 L110 240 L105 350 L95 350 Z" fill="#1e293b"/></svg>
+        <svg class="svg-tree mx-[80px]" width="350" height="500" viewBox="0 0 200 300"><circle cx="100" cy="100" r="70" fill="#047857"/><circle cx="60" cy="160" r="60" fill="#047857"/><circle cx="140" cy="160" r="60" fill="#047857"/><path d="M90 200 L110 200 L105 350 L95 350 Z" fill="#0f172a"/></svg>
+        <svg class="svg-tree mx-[40px]" width="280" height="420" viewBox="0 0 200 300"><path d="M100 20 C150 20 180 80 180 140 C180 200 130 250 100 250 C70 250 20 200 20 140 C20 80 50 20 100 20 Z" fill="#065f46"/><path d="M90 240 L110 240 L105 350 L95 350 Z" fill="#1e293b"/></svg>
+    </div>
+    <div class="parallax-layer layer-front" data-speed="0.12">
+        <svg class="svg-tree absolute left-[-10%]" width="600" height="800" viewBox="0 0 200 300"><defs><radialGradient id="gfl" cx="30%" cy="30%" r="70%"><stop offset="0%" stop-color="#10b981"/><stop offset="100%" stop-color="#022c22"/></radialGradient></defs><circle cx="100" cy="80" r="70" fill="url(#gfl)"/><circle cx="40" cy="150" r="65" fill="url(#gfl)"/><circle cx="160" cy="150" r="65" fill="url(#gfl)"/><circle cx="100" cy="200" r="80" fill="#064e3b"/><path d="M85 250 L115 250 L110 400 L90 400 Z" fill="#020617"/></svg>
+        <svg class="svg-tree absolute right-[-10%]" width="700" height="900" viewBox="0 0 200 300"><defs><radialGradient id="gfr" cx="30%" cy="30%" r="70%"><stop offset="0%" stop-color="#34d399"/><stop offset="100%" stop-color="#064e3b"/></radialGradient></defs><path d="M100 0 Q180 80 180 180 Q100 240 20 180 Q20 80 100 0 Z" fill="url(#gfr)"/><path d="M100 100 Q160 160 160 220 Q100 250 40 220 Q40 160 100 100 Z" fill="#10b981"/><path d="M85 220 L115 220 L110 400 L90 400 Z" fill="#020617"/></svg>
+    </div>
+    <div id="fireflies-container" class="absolute inset-0 z-10 pointer-events-none"></div>
+    <div class="absolute inset-0 z-30 flex flex-col justify-center items-center text-center px-4" style="background:radial-gradient(circle at center,transparent 0%,rgba(2,6,23,0.6) 100%);">
+        <div class="animate-reveal-up" style="animation-delay:1.5s;opacity:0;">
+            <div class="inline-flex items-center gap-2 ios-glass px-5 py-2 rounded-full mb-8 border-white/20">
+                <i class="fa-solid fa-microphone-lines text-moon-glow text-xs animate-pulse"></i>
+                <span class="text-xs font-bold tracking-[0.2em] text-white uppercase font-mono">Trình bày trước Hội đồng Đa chủ thể</span>
+            </div>
+            <h1 class="text-5xl md:text-7xl lg:text-[5.5rem] font-serif font-bold text-white leading-[1.1] mb-6 drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)]">
+                Đường Sắt Cao Tốc <br><span class="text-gradient-moon">Bắc - Nam</span><br>
+                <span class="text-3xl md:text-4xl font-medium italic text-slate-300">Góc nhìn từ Ngành Hàng không Việt Nam</span>
+            </h1>
+            <p class="text-lg md:text-xl text-slate-300 max-w-3xl mx-auto mb-10 font-light leading-relaxed drop-shadow-md">
+                "Chúng tôi không phản đối phát triển hạ tầng quốc gia. Chúng tôi đặt câu hỏi về <em>mô hình</em>, <em>thời điểm</em>, và yêu cầu một <em>sân chơi bình đẳng</em> cho tất cả các phương thức vận tải."
+            </p>
+            <a href="#overview-kpi" class="ios-btn bg-white/10 backdrop-blur-md border border-white/20 text-white px-8 py-4 rounded-full font-bold shadow-[0_0_30px_rgba(52,211,153,0.2)] hover:bg-white hover:text-forest-dark transition-all transform hover:scale-105 inline-flex items-center gap-3">
+                Khám Phá Phân Tích <i class="fa-solid fa-arrow-down animate-bounce"></i>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- KPI OVERVIEW -->
+<section id="overview-kpi" class="relative z-40 -mt-20 pb-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            <div class="ios-glass p-6 md:p-7 rounded-[2rem] reveal-node group">
+                <div class="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-forest-neon to-forest-mid rounded-2xl flex items-center justify-center text-white text-lg md:text-xl mb-4 md:mb-5 shadow-[0_0_20px_rgba(52,211,153,0.4)] group-hover:scale-110 transition-transform"><i class="fa-solid fa-sack-dollar"></i></div>
+                <p class="text-xs text-slate-500 font-mono tracking-widest uppercase mb-1">Tổng Mức Đầu Tư</p>
+                <div class="flex items-baseline gap-2 mb-2">
+                    <h3 class="text-3xl md:text-4xl font-sans font-black text-white counter" data-target="67.34">0</h3>
+                    <span class="text-sm text-slate-400">Tỷ USD</span>
+                </div>
+                <p class="text-xs text-forest-neon font-medium"><i class="fa-solid fa-circle-info mr-1"></i> 100% ngân sách nhà nước</p>
+            </div>
+            <div class="ios-glass p-6 md:p-7 rounded-[2rem] reveal-node group" style="animation-delay:0.1s">
+                <div class="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center text-white text-lg md:text-xl mb-4 md:mb-5 shadow-[0_0_20px_rgba(96,165,250,0.4)] group-hover:scale-110 transition-transform"><i class="fa-solid fa-chart-line"></i></div>
+                <p class="text-xs text-slate-500 font-mono tracking-widest uppercase mb-1">Đóng Góp GDP</p>
+                <div class="flex items-baseline gap-2 mb-2">
+                    <h3 class="text-3xl md:text-4xl font-sans font-black text-white counter" data-target="0.97">0</h3>
+                    <span class="text-sm text-slate-400">% / năm</span>
+                </div>
+                <p class="text-xs text-blue-400 font-medium"><i class="fa-solid fa-arrow-trend-up mr-1"></i> Lan toả 7 lĩnh vực</p>
+            </div>
+            <div class="ios-glass p-6 md:p-7 rounded-[2rem] reveal-node group" style="animation-delay:0.2s">
+                <div class="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center text-white text-lg md:text-xl mb-4 md:mb-5 shadow-[0_0_20px_rgba(251,191,36,0.4)] group-hover:scale-110 transition-transform"><i class="fa-solid fa-house-chimney-crack"></i></div>
+                <p class="text-xs text-slate-500 font-mono tracking-widest uppercase mb-1">Hộ Dân Di Dời</p>
+                <div class="flex items-baseline gap-2 mb-2">
+                    <h3 class="text-3xl md:text-4xl font-sans font-black text-white counter" data-target="120.8">0</h3>
+                    <span class="text-sm text-slate-400">Nghìn Hộ</span>
+                </div>
+                <p class="text-xs text-amber-400 font-medium"><i class="fa-solid fa-users mr-1"></i> Cần chính sách tái định cư tốt</p>
+            </div>
+            <div class="ios-glass p-6 md:p-7 rounded-[2rem] reveal-node group" style="animation-delay:0.3s">
+                <div class="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-purple-400 to-pink-500 rounded-2xl flex items-center justify-center text-white text-lg md:text-xl mb-4 md:mb-5 shadow-[0_0_20px_rgba(168,85,247,0.4)] group-hover:scale-110 transition-transform"><i class="fa-solid fa-train-tram"></i></div>
+                <p class="text-xs text-slate-500 font-mono tracking-widest uppercase mb-1">Chiều Dài Tuyến</p>
+                <div class="flex items-baseline gap-2 mb-2">
+                    <h3 class="text-3xl md:text-4xl font-sans font-black text-white counter" data-target="1541">0</h3>
+                    <span class="text-sm text-slate-400">km</span>
+                </div>
+                <p class="text-xs text-purple-400 font-medium"><i class="fa-solid fa-map-location-dot mr-1"></i> Qua 20 tỉnh thành, 23 ga</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- ===== PHẦN 1: LỢI ÍCH & BẤT LỢI CHO HÀNG KHÔNG ===== -->
+<section id="phan-1" class="py-24 relative z-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16 reveal-node">
+            <span class="text-forest-neon font-mono tracking-[0.2em] uppercase text-xs border border-forest-neon/30 px-4 py-1.5 rounded-full bg-forest-neon/10">CHƯƠNG I</span>
+            <h2 class="text-4xl md:text-5xl font-serif font-bold text-white mt-6 mb-4">ĐSCT Tác Động Thế Nào Đến <span class="text-gradient-forest">Ngành Hàng Không?</span></h2>
+            <p class="text-slate-400 max-w-2xl mx-auto text-lg">Phân tích trung thực: ghi nhận cả cơ hội lẫn thách thức. Tác động thực tế phụ thuộc vào cách mỗi hãng bay phản ứng và mức độ chủ động chuyển đổi.</p>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex justify-center gap-2 mb-10 reveal-node">
+            <button class="tab-btn active" onclick="switchTab('tab-loi-ich', this)"><i class="fa-solid fa-thumbs-up mr-2"></i>Lợi ích (4)</button>
+            <button class="tab-btn" onclick="switchTab('tab-bat-loi', this)"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Thách thức (6)</button>
+            <button class="tab-btn" onclick="switchTab('tab-thi-phan', this)"><i class="fa-solid fa-chart-pie mr-2"></i>Phân tích thị phần</button>
+        </div>
+
+        <!-- Tab: Lợi ích -->
+        <div id="tab-loi-ich" class="tab-panel active reveal-node">
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="ios-glass p-7 rounded-3xl border-l-4 border-l-forest-neon">
+                    <div class="flex items-start gap-4 mb-4">
+                        <div class="w-10 h-10 bg-forest-neon/15 rounded-xl flex items-center justify-center text-forest-neon border border-forest-neon/30 shrink-0"><i class="fa-solid fa-weight-hanging"></i></div>
+                        <h4 class="text-white font-bold text-lg font-serif leading-tight">1. Thoát khỏi gánh nặng chặng ngắn lỗ vốn</h4>
+                    </div>
+                    <p class="text-slate-300 text-sm leading-relaxed">Hàng không hiện phải duy trì các chặng dưới 500km không có lợi nhuận, lấy lãi chặng dài bù lỗ chặng ngắn. Khi ĐSCT đảm nhận nhu cầu này, các hãng có cơ sở chính đáng để cắt giảm chuyến lỗ, tập trung nguồn lực cho tuyến sinh lời cao hơn.</p>
+                    <p class="text-xs text-forest-neon mt-3 font-mono">Nguồn: Báo Điện Tử Chính Phủ, vovgiaothong.vn</p>
+                </div>
+                <div class="ios-glass p-7 rounded-3xl border-l-4 border-l-blue-400">
+                    <div class="flex items-start gap-4 mb-4">
+                        <div class="w-10 h-10 bg-blue-400/15 rounded-xl flex items-center justify-center text-blue-400 border border-blue-400/30 shrink-0"><i class="fa-solid fa-earth-asia"></i></div>
+                        <h4 class="text-white font-bold text-lg font-serif leading-tight">2. Tập trung chặng dài &amp; quốc tế — vùng lợi thế thực sự</h4>
+                    </div>
+                    <p class="text-slate-300 text-sm leading-relaxed">ĐSCT đảm nhận cự ly 300–800km, còn từ 800km trở lên hàng không giữ lợi thế tốc độ tuyệt đối. Bà Catherine Trautmann, Chủ tịch Hiệp hội Đường sắt cao tốc châu Âu, xác nhận: tàu là lựa chọn lý tưởng chặng ngắn-trung, máy bay vẫn là số một cho chặng dài liên lục địa.</p>
+                    <p class="text-xs text-blue-400 mt-3 font-mono">Nguồn: tapchihangkhong.vn, Vietnam Airlines</p>
+                </div>
+                <div class="ios-glass p-7 rounded-3xl border-l-4 border-l-amber-400">
+                    <div class="flex items-start gap-4 mb-4">
+                        <div class="w-10 h-10 bg-amber-400/15 rounded-xl flex items-center justify-center text-amber-400 border border-amber-400/30 shrink-0"><i class="fa-solid fa-plane-arrival"></i></div>
+                        <h4 class="text-white font-bold text-lg font-serif leading-tight">3. Giải phóng slot bay tại Nội Bài &amp; Tân Sơn Nhất</h4>
+                    </div>
+                    <p class="text-slate-300 text-sm leading-relaxed">Hai sân bay lớn nhất đang quá tải. Khi ĐSCT hút bớt khách chặng ngắn, các slot quý giá được tái phân bổ cho đường bay quốc tế sinh lời cao hơn — đây là lợi ích chiến lược dài hạn rõ ràng và cụ thể nhất mà ĐSCT mang lại cho hàng không.</p>
+                    <p class="text-xs text-amber-400 mt-3 font-mono">Nguồn: baochinhphu.vn</p>
+                </div>
+                <div class="ios-glass p-7 rounded-3xl border-l-4 border-l-purple-400">
+                    <div class="flex items-start gap-4 mb-4">
+                        <div class="w-10 h-10 bg-purple-400/15 rounded-xl flex items-center justify-center text-purple-400 border border-purple-400/30 shrink-0"><i class="fa-solid fa-trophy"></i></div>
+                        <h4 class="text-white font-bold text-lg font-serif leading-tight">4. Áp lực cạnh tranh thúc đẩy nâng chất dịch vụ</h4>
+                    </div>
+                    <p class="text-slate-300 text-sm leading-relaxed">ĐSCT là cú hích để hàng không cải thiện dịch vụ, giảm chậm chuyến, tối ưu trải nghiệm hành khách. Hiệu ứng cạnh tranh lành mạnh này có lợi cho cả ngành và người tiêu dùng — bài học từ châu Âu cho thấy chất lượng hàng không tăng đáng kể sau khi tàu cao tốc xuất hiện.</p>
+                    <p class="text-xs text-purple-400 mt-3 font-mono">Nguồn: vovgiaothong.vn</p>
+                </div>
+            </div>
+            <div class="mt-6 ios-glass p-5 rounded-2xl border border-forest-neon/20 bg-forest-neon/5 reveal-node">
+                <p class="text-sm text-slate-300"><i class="fa-solid fa-lightbulb text-forest-neon mr-2"></i><strong class="text-forest-neon">Lưu ý quan trọng:</strong> Những lợi ích này không tự động đến. Hãng nào chủ động tái cơ cấu sớm sẽ hưởng lợi; hãng nào cố bám vào chặng ngắn và không chuẩn bị tài chính cho giai đoạn chuyển đổi sẽ đối mặt với rủi ro sinh tồn thực sự.</p>
+            </div>
+        </div>
+
+        <!-- Tab: Thách thức -->
+        <div id="tab-bat-loi" class="tab-panel reveal-node">
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div class="ios-glass p-6 rounded-2xl border border-red-500/20">
+                    <div class="w-9 h-9 bg-red-500/15 rounded-xl flex items-center justify-center text-red-400 border border-red-500/20 mb-3"><i class="fa-solid fa-road-barrier"></i></div>
+                    <h5 class="text-white font-bold mb-2">Mất ưu thế cự ly ngắn–trung</h5>
+                    <p class="text-slate-400 text-sm leading-relaxed">ĐSCT chiếm ưu thế hoàn toàn 300–800km. Hàng không đang duy trì chặng dưới 500km không lợi nhuận với chi phí cất/hạ cánh rất cao.</p>
+                </div>
+                <div class="ios-glass p-6 rounded-2xl border border-red-500/20">
+                    <div class="w-9 h-9 bg-red-500/15 rounded-xl flex items-center justify-center text-red-400 border border-red-500/20 mb-3"><i class="fa-solid fa-tags"></i></div>
+                    <h5 class="text-white font-bold mb-2">Cạnh tranh gay gắt về giá vé</h5>
+                    <p class="text-slate-400 text-sm leading-relaxed">Vé ĐSCT dự kiến bằng ~75% giá vé hàng không. Chặng HN–Vinh: tàu ~1,4 triệu, máy bay ~2,1 triệu đồng. Chênh lệch đáng kể với người đi lại thường xuyên.</p>
+                </div>
+                <div class="ios-glass p-6 rounded-2xl border border-amber-500/20">
+                    <div class="w-9 h-9 bg-amber-500/15 rounded-xl flex items-center justify-center text-amber-400 border border-amber-500/20 mb-3"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                    <h5 class="text-white font-bold mb-2">Bất lợi tổng thời gian thực tế</h5>
+                    <p class="text-slate-400 text-sm leading-relaxed">Sân bay thường ở xa trung tâm, thủ tục check-in mất 1–2 tiếng. Ga ĐSCT trung tâm thành phố, ít thủ tục hơn. Tổng thời gian "cửa đến cửa" là yếu tố quyết định, không phải thời gian bay thuần túy.</p>
+                </div>
+                <div class="ios-glass p-6 rounded-2xl border border-amber-500/20">
+                    <div class="w-9 h-9 bg-amber-500/15 rounded-xl flex items-center justify-center text-amber-400 border border-amber-500/20 mb-3"><i class="fa-solid fa-gauge-high"></i></div>
+                    <h5 class="text-white font-bold mb-2">Áp lực về tính đúng giờ</h5>
+                    <p class="text-slate-400 text-sm leading-relaxed">ĐSCT sai lệch thường dưới 1 phút, ít chịu ảnh hưởng thời tiết. Đây là thách thức lớn với hàng không — tỷ lệ delay cao là điểm yếu cần cải thiện.</p>
+                </div>
+                <div class="ios-glass p-6 rounded-2xl border border-red-500/20">
+                    <div class="w-9 h-9 bg-red-500/15 rounded-xl flex items-center justify-center text-red-400 border border-red-500/20 mb-3"><i class="fa-solid fa-chart-area"></i></div>
+                    <h5 class="text-white font-bold mb-2">Sụt giảm thị phần nội địa</h5>
+                    <p class="text-slate-400 text-sm leading-relaxed">Kinh nghiệm quốc tế: dưới 500km hàng không mất 70–80% thị phần. Khoảng 15–20 triệu khách/năm có thể chuyển sang tàu trong trung hạn.</p>
+                </div>
+                <div class="ios-glass p-6 rounded-2xl border border-amber-500/20">
+                    <div class="w-9 h-9 bg-amber-500/15 rounded-xl flex items-center justify-center text-amber-400 border border-amber-500/20 mb-3"><i class="fa-solid fa-arrows-rotate"></i></div>
+                    <h5 class="text-white font-bold mb-2">Buộc phải tái cơ cấu toàn diện</h5>
+                    <p class="text-slate-400 text-sm leading-relaxed">Chi phí chuyển đổi đội máy bay từ thân hẹp (A320) sang thân rộng (B787, A350), đào tạo lại phi công, xây dựng lại chuỗi dịch vụ — đây là chi phí thực không thể bỏ qua.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Phân tích thị phần -->
+        <div id="tab-thi-phan" class="tab-panel reveal-node">
+            <div class="grid lg:grid-cols-2 gap-8">
+                <div class="ios-glass p-7 rounded-[2rem]">
+                    <h4 class="font-bold text-white text-lg font-serif mb-5 border-b border-white/10 pb-4">Dự báo mất thị phần theo cự ly (Kinh nghiệm quốc tế)</h4>
+                    <div class="space-y-5">
+                        <div>
+                            <div class="flex justify-between text-sm mb-2">
+                                <span class="text-slate-300">Chặng &lt; 500km (HN–Vinh, HCM–Nha Trang)</span>
+                                <span class="text-red-400 font-bold">Mất 70–80%</span>
+                            </div>
+                            <div class="progress-bar"><div class="progress-fill bg-red-400" style="width:75%"></div></div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-2">
+                                <span class="text-slate-300">Chặng 500–800km (HN–Đà Nẵng, HCM–Đà Nẵng)</span>
+                                <span class="text-amber-400 font-bold">Mất 40–60%</span>
+                            </div>
+                            <div class="progress-bar"><div class="progress-fill bg-amber-400" style="width:50%"></div></div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-2">
+                                <span class="text-slate-300">Chặng &gt; 800km (HN–HCM 1.726km)</span>
+                                <span class="text-forest-neon font-bold">Mất ~10–20%</span>
+                            </div>
+                            <div class="progress-bar"><div class="progress-fill bg-forest-neon" style="width:15%"></div></div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-2">
+                                <span class="text-slate-300">Đường bay quốc tế</span>
+                                <span class="text-blue-400 font-bold">Không ảnh hưởng</span>
+                            </div>
+                            <div class="progress-bar"><div class="progress-fill bg-blue-400" style="width:2%"></div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="ios-glass p-7 rounded-[2rem]">
+                    <h4 class="font-bold text-white text-lg font-serif mb-5 border-b border-white/10 pb-4">So sánh tổng thời gian "cửa đến cửa"</h4>
+                    <div class="space-y-4">
+                        <div class="p-4 rounded-xl bg-red-900/20 border border-red-500/20">
+                            <div class="flex justify-between mb-2"><span class="text-sm text-white font-bold">HN – Vinh (~300km)</span><span class="text-red-400 font-bold text-sm">Tàu thắng</span></div>
+                            <p class="text-xs text-slate-400">Máy bay: ~3.5 giờ | ĐSCT: ~1.5–2 giờ</p>
+                        </div>
+                        <div class="p-4 rounded-xl bg-amber-900/20 border border-amber-500/20">
+                            <div class="flex justify-between mb-2"><span class="text-sm text-white font-bold">HN – Đà Nẵng (~760km)</span><span class="text-amber-400 font-bold text-sm">Cạnh tranh</span></div>
+                            <p class="text-xs text-slate-400">Máy bay: ~4 giờ | ĐSCT: ~3 giờ</p>
+                        </div>
+                        <div class="p-4 rounded-xl bg-forest-deep/40 border border-forest-neon/20">
+                            <div class="flex justify-between mb-2"><span class="text-sm text-white font-bold">HN – TP.HCM (~1.726km)</span><span class="text-forest-neon font-bold text-sm">Máy bay thắng</span></div>
+                            <p class="text-xs text-slate-400">Máy bay: ~4.5–5 giờ | ĐSCT: ~5.5–6 giờ</p>
+                        </div>
+                        <div class="p-4 rounded-xl bg-blue-900/20 border border-blue-500/20">
+                            <div class="flex justify-between mb-2"><span class="text-sm text-white font-bold">Đường bay quốc tế</span><span class="text-blue-400 font-bold text-sm">Độc quyền tự nhiên</span></div>
+                            <p class="text-xs text-slate-400">ĐSCT không thể cạnh tranh được với máy bay trên chặng liên lục địa</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- ===== PHẦN 2: BÀI HỌC QUỐC TẾ & TÀI CHÍNH ===== -->
+<section id="phan-2" class="py-24 relative">
+    <div class="absolute inset-0 bg-gradient-to-b from-[#020617] via-[#064e3b]/20 to-[#020617]"></div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+
+        <div class="text-center mb-16 reveal-node">
+            <span class="text-blue-400 font-mono tracking-widest uppercase text-xs border border-blue-400/30 px-4 py-1.5 rounded-full bg-blue-400/10">CHƯƠNG II</span>
+            <h2 class="text-4xl md:text-5xl font-serif font-bold text-white mt-6 mb-4">Bài Học Quốc Tế &amp; <span class="text-blue-400">Bài Toán Tài Chính</span></h2>
+            <p class="text-slate-400 max-w-3xl mx-auto text-lg">Không bác bỏ kinh nghiệm quốc tế — mà học đúng điều kiện thực tế của từng quốc gia, trong đó có Việt Nam 2025.</p>
+        </div>
+
+        <!-- Theory Box - 3 quoc gia -->
+        <div class="ios-glass p-8 rounded-3xl mb-12 reveal-node">
+            <h4 class="text-xl font-bold text-white mb-6 font-serif text-center">Ba Tình Huống Tham Chiếu</h4>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div>
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center text-blue-400 border border-blue-500/30 shrink-0"><i class="fa-solid fa-train-tram"></i></div>
+                        <h5 class="text-white font-bold">Nhật Bản (Shinkansen 1964)</h5>
+                    </div>
+                    <p class="text-slate-400 text-sm leading-relaxed mb-3">Thành công nhờ: nước công nghiệp phát triển, tự chủ 100% công nghệ, hành lang Tokyo–Osaka mật độ dân số cao nhất thế giới. Chính phủ Nhật phân định rõ vai trò từng phương thức.</p>
+                    <div class="flex items-center gap-2 text-xs"><span class="badge-rank badge-mid">Điều kiện khác VN</span></div>
+                </div>
+                <div>
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-10 h-10 bg-red-500/20 rounded-xl flex items-center justify-center text-red-400 border border-red-500/30 shrink-0"><i class="fa-solid fa-money-bill-trend-up"></i></div>
+                        <h5 class="text-white font-bold">Trung Quốc (Cảnh báo)</h5>
+                    </div>
+                    <p class="text-slate-400 text-sm leading-relaxed mb-3">Tổng nợ China State Railway Group: 863 tỷ USD (2024). Chỉ 6/15 tuyến 350km/h trang trải toàn bộ chi phí vốn. Giá vé một số tuyến tăng 20% năm 2023 để giảm gánh nặng nợ.</p>
+                    <div class="flex items-center gap-2 text-xs"><span class="badge-rank badge-low">Rủi ro cụ thể</span></div>
+                </div>
+                <div>
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-10 h-10 bg-amber-500/20 rounded-xl flex items-center justify-center text-amber-400 border border-amber-500/30 shrink-0"><i class="fa-solid fa-motorcycle"></i></div>
+                        <h5 class="text-white font-bold">Indonesia (Whoosh 140km)</h5>
+                    </div>
+                    <p class="text-slate-400 text-sm leading-relaxed mb-3">Tuyến Jakarta–Bandung 140km (9% chiều dài VN), vốn 7,2 tỷ USD, đội vốn 1 tỷ USD, chậm 4 năm. Lỗ ròng 251 triệu USD năm 2024. VN xây 1.541km — quy mô rủi ro quản lý khác hoàn toàn.</p>
+                    <div class="flex items-center gap-2 text-xs"><span class="badge-rank badge-low">Gần nhất với VN</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="grid lg:grid-cols-2 gap-10 mb-12">
+            <div class="ios-glass p-8 rounded-[2rem] reveal-node">
+                <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
+                    <div>
+                        <h4 class="font-bold text-white text-xl font-serif">Giá vé: ĐSCT so với hàng không</h4>
+                        <p class="text-xs text-slate-400 mt-1">Chặng Hà Nội – TP.HCM (Triệu VNĐ)</p>
+                    </div>
+                    <span class="text-forest-neon bg-forest-neon/10 px-3 py-1 rounded text-xs font-mono border border-forest-neon/30">TRIỆU VNĐ</span>
+                </div>
+                <div class="chart-container"><canvas id="growthChart"></canvas></div>
+                <p class="text-xs text-slate-400 mt-4 italic">Ủy ban Kinh tế Quốc hội lưu ý: dự toán 60–70% giá máy bay có thể chưa phản ánh đủ chi phí vì VN chưa làm chủ công nghệ.</p>
+            </div>
+            <div class="ios-glass p-8 rounded-[2rem] reveal-node" style="animation-delay:0.1s">
+                <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
+                    <div>
+                        <h4 class="font-bold text-white text-xl font-serif">Chi phí vòng đời dự án</h4>
+                        <p class="text-xs text-slate-400 mt-1">Ước tính tổng chi phí 50 năm (Tỷ USD)</p>
+                    </div>
+                    <button onclick="openModal('logModal')" class="ios-btn bg-black/40 text-moon-glow text-[10px] font-mono px-3 py-1.5 rounded-lg border border-moon-glow/30 flex items-center gap-1.5 hover:bg-moon-glow/10"><i class="fa-solid fa-circle-info"></i> CHI TIẾT</button>
+                </div>
+                <div class="chart-container"><canvas id="sectorChart"></canvas></div>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="ios-glass rounded-[2rem] overflow-hidden reveal-node">
+            <div class="bg-white/5 p-6 border-b border-white/10">
+                <h4 class="font-bold text-white font-serif text-xl flex items-center gap-3"><i class="fa-solid fa-table text-blue-400"></i> Bảng Tổng Hợp: Rủi ro tài chính được ghi nhận chính thức</h4>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="premium-table">
+                    <thead><tr>
+                        <th class="w-[30%]">Vấn đề</th>
+                        <th>Trích dẫn / Số liệu</th>
+                        <th>Lưu ý chính sách</th>
+                    </tr></thead>
+                    <tbody>
+                        <tr>
+                            <td class="font-medium text-forest-neon"><i class="fa-solid fa-building-columns mr-2 opacity-60 w-4"></i>Áp lực ngân sách</td>
+                            <td class="text-slate-300">"Hút 60% tổng kế hoạch đầu tư công trung hạn" (Báo Thanh Tra)</td>
+                            <td class="text-amber-400">Cần cân nhắc cơ hội chi phí cho y tế, giáo dục, ĐBSCL</td>
+                        </tr>
+                        <tr>
+                            <td class="font-medium text-blue-400"><i class="fa-solid fa-chart-line mr-2 opacity-60 w-4"></i>Hiệu quả tài chính</td>
+                            <td class="text-slate-300">"Giai đoạn đầu, nguồn thu từ bán vé khó bù đắp ngay" (Báo Pháp Luật TP.HCM)</td>
+                            <td class="text-amber-400">Cần stress test 3 kịch bản (tốt / trung bình / xấu)</td>
+                        </tr>
+                        <tr>
+                            <td class="font-medium text-amber-400"><i class="fa-solid fa-scale-unbalanced mr-2 opacity-60 w-4"></i>Cảnh báo từ Bộ Tài chính</td>
+                            <td class="text-slate-300">"Tạo áp lực lớn đến NSNN và cơ cấu nợ công" (Bộ Tài chính)</td>
+                            <td class="text-amber-400">Yêu cầu minh bạch cơ chế huy động vốn trước phê duyệt</td>
+                        </tr>
+                        <tr>
+                            <td class="font-medium text-red-400"><i class="fa-solid fa-triangle-exclamation mr-2 opacity-60 w-4"></i>Nguy cơ đội vốn</td>
+                            <td class="text-slate-300">Metro Cát Linh–Hà Đông: lỡ hẹn 8 lần, đội vốn &gt;200%. Bến Lức–Long Thành: khởi công 2014, vẫn dang dở (VietnamNet)</td>
+                            <td class="text-red-400">Tiền lệ trong nước đòi hỏi cơ chế giám sát độc lập</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- ===== PHẦN 3: TIẾNG NÓI NGƯỜI DÂN ===== -->
+<section id="phan-dan" class="py-24 relative bg-slate-950/50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <div class="text-center mb-16 reveal-node">
+            <span class="text-rose-400 font-mono tracking-widest uppercase text-xs border border-rose-400/30 px-4 py-1.5 rounded-full bg-rose-400/10">CHƯƠNG III</span>
+            <h2 class="text-4xl md:text-5xl font-serif font-bold text-white mt-6 mb-4">Tiếng Nói Người Dân &amp; <span class="text-rose-400">Những Lo Ngại Thực Tế</span></h2>
+            <p class="text-slate-400 max-w-3xl mx-auto text-lg">Bên cạnh lợi ích vĩ mô, cần lắng nghe những lo ngại của người dân — không phải để phủ nhận dự án, mà để xây dựng chính sách có trách nhiệm hơn.</p>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            <div class="ios-glass p-6 rounded-2xl border-t-2 border-t-amber-400 reveal-node">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="text-2xl font-serif font-black text-amber-400">❶</span>
+                    <h5 class="text-white font-bold">Gánh nặng tài chính &amp; nợ công</h5>
+                </div>
+                <p class="text-slate-400 text-sm leading-relaxed mb-3">67,34 tỷ USD — câu hỏi "Tiền đâu?" là lo ngại chính đáng. Quốc hội năm 2010 từng bác dự án vì gánh nặng nợ công. Phó Chủ tịch Quốc hội Nguyễn Đức Hải nhấn mạnh rủi ro mất cân đối ngân sách trung hạn và phụ thuộc nợ vay nước ngoài.</p>
+                <p class="text-xs text-amber-400 font-mono">Nguồn: Báo Đấu Thầu, The Leader</p>
+            </div>
+            <div class="ios-glass p-6 rounded-2xl border-t-2 border-t-rose-400 reveal-node" style="animation-delay:0.1s">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="text-2xl font-serif font-black text-rose-400">❷</span>
+                    <h5 class="text-white font-bold">Giá vé và khả năng tiếp cận</h5>
+                </div>
+                <p class="text-slate-400 text-sm leading-relaxed mb-3">Vé HN–HCM: hạng nhất 6,9 triệu, hạng ba 1,7 triệu đồng. Với thu nhập lao động phổ thông 7–8 triệu/tháng, một chuyến khứ hồi hạng ba đã chiếm hơn 40% lương tháng. Ủy ban Kinh tế đề nghị làm rõ hiệu quả tài chính khi VN chưa làm chủ công nghệ.</p>
+                <p class="text-xs text-rose-400 font-mono">Nguồn: VnExpress, Báo Dân Việt</p>
+            </div>
+            <div class="ios-glass p-6 rounded-2xl border-t-2 border-t-blue-400 reveal-node" style="animation-delay:0.15s">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="text-2xl font-serif font-black text-blue-400">❸</span>
+                    <h5 class="text-white font-bold">Tính khả thi tài chính dài hạn</h5>
+                </div>
+                <p class="text-slate-400 text-sm leading-relaxed mb-3">Nhiều dự án giao thông VN có dự báo nhu cầu sai lệch đáng kể so với thực tế. Dự báo được lập trước COVID-19, trong khi hành vi di chuyển hậu đại dịch đã thay đổi (làm việc từ xa, họp online tăng mạnh). Đại biểu Quốc hội đặt câu hỏi về tác động của công nghệ 4.0 đến nhu cầu di chuyển.</p>
+                <p class="text-xs text-blue-400 font-mono">Nguồn: Báo Dân Việt, Báo Pháp Luật TP.HCM</p>
+            </div>
+            <div class="ios-glass p-6 rounded-2xl border-t-2 border-t-orange-400 reveal-node" style="animation-delay:0.2s">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="text-2xl font-serif font-black text-orange-400">❹</span>
+                    <h5 class="text-white font-bold">120.836 hộ dân phải di dời</h5>
+                </div>
+                <p class="text-slate-400 text-sm leading-relaxed mb-3">Dự án qua 20 tỉnh, cần 10.827 ha đất. Lo ngại: chênh lệch đền bù và giá thị trường, khu tái định cư thiếu hạ tầng cơ bản, phá vỡ quan hệ xã hội. Khảo sát tại Bình Sơn: tuyến cắt ngang địa đạo, nghĩa trang liệt sĩ, trường học, hồ chứa nước.</p>
+                <p class="text-xs text-orange-400 font-mono">Nguồn: Tuổi Trẻ, OneHousing</p>
+            </div>
+            <div class="ios-glass p-6 rounded-2xl border-t-2 border-t-red-400 reveal-node" style="animation-delay:0.25s">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="text-2xl font-serif font-black text-red-400">❺</span>
+                    <h5 class="text-white font-bold">Rủi ro đội vốn &amp; năng lực quản lý</h5>
+                </div>
+                <p class="text-slate-400 text-sm leading-relaxed mb-3">Vấn đề lớn nhất không phải công nghệ mà là năng lực quản lý và giám sát. Metro Cát Linh–Hà Đông lỡ hẹn 8 lần, đội vốn &gt;200%. Cao tốc Bến Lức–Long Thành khởi công 2014 vẫn chưa xong. Cần cơ chế giám sát độc lập và phòng chống thất thoát.</p>
+                <p class="text-xs text-red-400 font-mono">Nguồn: VietnamNet, Báo Thanh Niên</p>
+            </div>
+            <div class="ios-glass p-6 rounded-2xl border-t-2 border-t-purple-400 reveal-node" style="animation-delay:0.3s">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="text-2xl font-serif font-black text-purple-400">❻</span>
+                    <h5 class="text-white font-bold">Tác động các ngành khác chưa được làm rõ</h5>
+                </div>
+                <p class="text-slate-400 text-sm leading-relaxed mb-3">Ủy ban Kinh tế Quốc hội xác nhận dự án sẽ ảnh hưởng lớn đến các chặng bay ngắn như HN–Vinh, HCM–Nha Trang — nhưng báo cáo tiền khả thi chưa làm rõ phương án xử lý. Đây là khoảng trống chính sách cần được lấp đầy.</p>
+                <p class="text-xs text-purple-400 font-mono">Nguồn: Báo Dân Việt (Ủy ban Kinh tế QH)</p>
+            </div>
+        </div>
+
+        <!-- People quote box -->
+        <div class="ios-glass p-8 rounded-3xl border border-rose-500/20 bg-rose-900/10 reveal-node">
+            <div class="flex items-start gap-5">
+                <div class="w-14 h-14 bg-rose-500/15 rounded-2xl flex items-center justify-center text-rose-400 text-2xl border border-rose-500/30 shrink-0"><i class="fa-solid fa-users-slash"></i></div>
+                <div>
+                    <h4 class="text-xl font-bold text-white mb-3 font-serif">Những người chịu tác động trực tiếp nhất</h4>
+                    <p class="text-slate-300 leading-relaxed text-sm">120.836 hộ dân — trung bình 4 người/hộ — là gần nửa triệu con người sẽ phải rời bỏ nơi gắn bó bao đời. Điều họ lo ngại không chỉ là mức đền bù, mà còn là sinh kế, quan hệ cộng đồng, và sự đảm bảo cho cuộc sống ở nơi mới. Lời hứa về khu tái định cư "hiện đại và đồng bộ" cần được cụ thể hóa thành cam kết pháp lý trước khi thi công.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- ===== PHẦN 4: CHIẾN LƯỢC & ĐỀ XUẤT ===== -->
+<section id="phan-3" class="py-24 relative bg-slate-950 border-t border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <div class="text-center mb-16 reveal-node">
+            <span class="text-amber-500 font-mono tracking-widest uppercase text-xs border border-amber-500/30 px-4 py-1.5 rounded-full bg-amber-500/10">CHƯƠNG IV</span>
+            <h2 class="text-4xl md:text-5xl font-serif font-bold text-white mt-6 mb-4">Chiến Lược Thích Ứng &amp; <span class="text-gradient-amber">Đề Xuất Cụ Thể</span></h2>
+            <p class="text-slate-400 max-w-2xl mx-auto text-lg">Hàng không không chờ chính sách để tồn tại. Đồng thời, yêu cầu nhà nước đảm bảo môi trường cạnh tranh công bằng — đó là hai mặt trận song song.</p>
+        </div>
+
+        <!-- Hybrid Strategy Overview -->
+        <div class="ios-glass p-8 rounded-3xl mb-12 reveal-node border border-forest-neon/20">
+            <div class="flex items-center gap-4 mb-6">
+                <div class="w-12 h-12 bg-forest-neon/15 rounded-2xl flex items-center justify-center text-forest-neon text-xl border border-forest-neon/30"><i class="fa-solid fa-sitemap"></i></div>
+                <div>
+                    <h4 class="text-xl font-bold text-white font-serif">Chiến Lược Cạnh Tranh Hỗn Hợp (Hybrid Strategy)</h4>
+                    <p class="text-sm text-slate-400">Không đối đầu trực tiếp về giá — tập trung tái định vị thông minh trên 4 trụ cột</p>
+                </div>
+            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="p-4 bg-white/5 rounded-2xl border border-white/10 text-center">
+                    <div class="w-10 h-10 bg-forest-neon/15 rounded-xl flex items-center justify-center text-forest-neon mx-auto mb-3 border border-forest-neon/30"><i class="fa-solid fa-shuffle"></i></div>
+                    <p class="text-xs font-bold text-white mb-1">TÁI CẤU TRÚC</p>
+                    <p class="text-xs text-slate-400">Rút lui có chọn lọc chặng ngắn → dồn lực chặng dài &amp; quốc tế</p>
+                </div>
+                <div class="p-4 bg-white/5 rounded-2xl border border-white/10 text-center">
+                    <div class="w-10 h-10 bg-blue-400/15 rounded-xl flex items-center justify-center text-blue-400 mx-auto mb-3 border border-blue-400/30"><i class="fa-solid fa-handshake"></i></div>
+                    <p class="text-xs font-bold text-white mb-1">CỘNG SINH</p>
+                    <p class="text-xs text-slate-400">ĐSCT là "feeder" gom khách → hàng không bay quốc tế (Air-to-Rail)</p>
+                </div>
+                <div class="p-4 bg-white/5 rounded-2xl border border-white/10 text-center">
+                    <div class="w-10 h-10 bg-amber-400/15 rounded-xl flex items-center justify-center text-amber-400 mx-auto mb-3 border border-amber-400/30"><i class="fa-solid fa-lock"></i></div>
+                    <p class="text-xs font-bold text-white mb-1">GIỮ CHÂN KHÁCH</p>
+                    <p class="text-xs text-slate-400">FFP ecosystem &amp; Big Data cá nhân hóa, tăng switching costs</p>
+                </div>
+                <div class="p-4 bg-white/5 rounded-2xl border border-white/10 text-center">
+                    <div class="w-10 h-10 bg-purple-400/15 rounded-xl flex items-center justify-center text-purple-400 mx-auto mb-3 border border-purple-400/30"><i class="fa-solid fa-stopwatch"></i></div>
+                    <p class="text-xs font-bold text-white mb-1">TỐI ƯU THỜI GIAN</p>
+                    <p class="text-xs text-slate-400">Số hóa mặt đất, biometrics, giảm chờ từ 120' xuống 45 phút</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Two columns: Cạnh tranh bất bình đẳng + Chiến lược quốc tế hóa -->
+        <div class="grid lg:grid-cols-12 gap-10 items-stretch mb-12">
+            <div class="lg:col-span-5 space-y-5 reveal-node flex flex-col justify-center">
+                <div class="ios-glass p-7 rounded-3xl border border-amber-500/30">
+                    <h5 class="text-amber-400 font-bold text-sm uppercase tracking-widest mb-3 flex items-center gap-2"><i class="fa-solid fa-scale-unbalanced text-xl"></i> Vấn đề bất đối xứng đầu tư</h5>
+                    <p class="text-slate-300 text-sm mb-4 leading-relaxed">Nhà nước đầu tư 67 tỷ USD hạ tầng ĐSCT (không hoàn vốn hạ tầng). Hàng không tự vay thương mại mua máy bay, trả phí hạ cánh, thuế nhiên liệu. Ủy ban Kinh tế Quốc hội đã xác nhận tác động tiêu cực lên hàng không là rõ ràng nhưng chưa có phương án xử lý.</p>
+                    <div class="flex items-center gap-2 text-xs text-amber-400"><i class="fa-solid fa-quote-left"></i><em>"Đó không phải 'tự lo' — đó là tự lo trong khi đang bị trói một tay."</em></div>
+                </div>
+                <div class="ios-glass p-7 rounded-3xl border border-forest-neon/30 bg-forest-neon/5">
+                    <h5 class="text-forest-neon font-bold text-sm uppercase tracking-widest mb-3 flex items-center gap-2"><i class="fa-solid fa-plane-departure text-xl"></i> Hàng không tự chuyển mình</h5>
+                    <ul class="text-slate-300 text-sm space-y-3">
+                        <li class="flex gap-2"><i class="fa-solid fa-check text-forest-neon mt-0.5 shrink-0"></i><span>Rút dần chặng ngắn lỗ, tăng cường chặng dài &amp; quốc tế (Ấn Độ, Trung Đông, Châu Phi, Đông Bắc Á mở rộng).</span></li>
+                        <li class="flex gap-2"><i class="fa-solid fa-check text-forest-neon mt-0.5 shrink-0"></i><span>Hợp tác Air-to-Rail: khách từ Vinh, Quy Nhơn đi ĐSCT ra Nội Bài, rồi bay Tokyo, Seoul — cả hai cùng thắng.</span></li>
+                        <li class="flex gap-2"><i class="fa-solid fa-check text-forest-neon mt-0.5 shrink-0"></i><span>Đẩy mạnh air cargo: thương mại điện tử VN tăng 25–30%/năm, hàng tươi sống &amp; dược phẩm cần tốc độ 2 tiếng.</span></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="lg:col-span-7 ios-glass p-8 rounded-[2rem] reveal-node" style="animation-delay:0.1s">
+                <div class="flex justify-between items-center mb-4 border-b border-white/10 pb-4">
+                    <div>
+                        <h4 class="font-bold text-white text-xl font-serif">So sánh quy mô: Indonesia vs Việt Nam</h4>
+                        <p class="text-xs text-slate-400 mt-1">Tuyến Whoosh 140km lỗ 251 triệu USD/năm — VN xây 1.541km</p>
+                    </div>
+                    <i class="fa-solid fa-scale-balanced text-amber-400 text-3xl"></i>
+                </div>
+                <div class="chart-container" style="height:320px"><canvas id="intlChart"></canvas></div>
+                <p class="text-xs text-slate-400 mt-3 italic">Trục hoành dạng logarithm để thể hiện chênh lệch. Không có nghĩa là VN không nên làm — mà cần mô hình quản lý và tài chính tương xứng với quy mô.</p>
+            </div>
+        </div>
+
+        <!-- 5 ĐỀ XUẤT CHÍNH SÁCH -->
+        <h4 class="text-3xl font-bold text-white mb-8 font-serif text-center reveal-node">5 Đề Xuất Chính Sách Từ Hàng Không</h4>
+        <div class="grid md:grid-cols-2 gap-6 reveal-node">
+            <div class="ios-glass p-6 rounded-2xl border-l-4 border-l-moon-glow">
+                <h4 class="text-lg font-bold text-white mb-2 flex items-center gap-2"><span class="text-moon-glow">①</span> Quy hoạch phân kỳ vận tải quốc gia</h4>
+                <p class="text-slate-400 text-sm leading-relaxed">Ban hành Quy hoạch Vận tải Đa phương thức: ĐSCT phục vụ chặng 150–800km; hàng không tập trung trên 800km và mạng quốc tế. Mô hình Nhật Bản và Hàn Quốc đã áp dụng thành công — hai phương thức bổ trợ nhau, không dẫm chân.</p>
+            </div>
+            <div class="ios-glass p-6 rounded-2xl border-l-4 border-l-moon-glow">
+                <h4 class="text-lg font-bold text-white mb-2 flex items-center gap-2"><span class="text-moon-glow">②</span> Bình đẳng giá vé — không bù lỗ bằng ngân sách</h4>
+                <p class="text-slate-400 text-sm leading-relaxed">Sau khi đi vào vận hành, giá vé ĐSCT phải phản ánh đúng chi phí vận hành thực tế, không được bù lỗ bằng thuế để cạnh tranh giá không công bằng. Tàu và máy bay cùng chịu quy tắc thị trường.</p>
+            </div>
+            <div class="ios-glass p-6 rounded-2xl border-l-4 border-l-moon-glow">
+                <h4 class="text-lg font-bold text-white mb-2 flex items-center gap-2"><span class="text-moon-glow">③</span> Tích hợp đặt vé liên phương thức</h4>
+                <p class="text-slate-400 text-sm leading-relaxed">Xây dựng nền tảng đặt vé chung: một PNR duy nhất bao gồm cả chặng ĐSCT nội địa và chuyến bay quốc tế. Khách từ Vinh muốn bay sang Nhật: mua một vé — tàu Vinh–Nội Bài + bay Tokyo. Hub & Spoke tích hợp — Nhật, Hàn đã làm rất thành công.</p>
+            </div>
+            <div class="ios-glass p-6 rounded-2xl border-l-4 border-l-moon-glow">
+                <h4 class="text-lg font-bold text-white mb-2 flex items-center gap-2"><span class="text-moon-glow">④</span> Stress test tài chính công khai</h4>
+                <p class="text-slate-400 text-sm leading-relaxed">Bộ Tài chính cần công bố 3 kịch bản: Lạc quan (khách đạt 100%, đúng tiến độ), Cơ sở (khách 80%, đội vốn 15%), Xấu nhất (khách 60%, đội vốn 30%). Công khai để toàn dân và Quốc hội giám sát.</p>
+            </div>
+            <div class="ios-glass p-6 rounded-2xl border-l-4 border-l-forest-neon md:col-span-2">
+                <h4 class="text-lg font-bold text-white mb-2 flex items-center gap-2"><span class="text-forest-neon">⑤</span> Quỹ Chuyển đổi Ngành Vận tải</h4>
+                <p class="text-slate-400 text-sm leading-relaxed">Trích 0,5–1% doanh thu khai thác ĐSCT hàng năm vào Quỹ Chuyển đổi Hạ tầng Vận tải, dùng để hỗ trợ đào tạo lại lao động hàng không bị ảnh hưởng, ưu đãi thuế nhập khẩu máy bay thế hệ mới cho hãng mở đường bay quốc tế, và hỗ trợ sinh kế 120.836 hộ tái định cư. Đức và Pháp đã có cơ chế tương tự khi mở rộng mạng ĐSCT.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- KẾT LUẬN -->
+<section id="ket-luan" class="py-32 relative overflow-hidden bg-forest-dark border-t border-slate-800">
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-forest-deep via-transparent to-transparent opacity-50"></div>
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 reveal-node text-center relative z-10">
+        <div class="w-20 h-20 mx-auto rounded-full bg-forest-neon/10 border border-forest-neon/30 flex items-center justify-center mb-8 shadow-[0_0_30px_rgba(52,211,153,0.2)]">
+            <i class="fa-solid fa-compass text-3xl text-forest-neon"></i>
+        </div>
+        <h3 class="text-5xl md:text-6xl font-serif font-bold text-white mb-6">Lập Trường <span class="text-gradient-forest">Tổng Kết</span></h3>
+
+        <!-- Position card -->
+        <div class="ios-glass p-8 rounded-3xl border border-forest-neon/30 mb-10 text-left">
+            <div class="flex items-center gap-3 mb-5">
+                <div class="w-10 h-10 bg-forest-neon/15 rounded-xl flex items-center justify-center text-forest-neon border border-forest-neon/30"><i class="fa-solid fa-check-double"></i></div>
+                <h4 class="text-xl font-bold text-white font-serif">Quan điểm: Nên làm — nhưng cần làm đúng cách</h4>
+            </div>
+            <div class="grid md:grid-cols-3 gap-5">
+                <div class="p-4 bg-forest-neon/5 rounded-2xl border border-forest-neon/15">
+                    <p class="text-xs font-bold text-forest-neon uppercase tracking-widest mb-2 font-mono">Lý do nên làm</p>
+                    <p class="text-slate-300 text-sm leading-relaxed">Trục Bắc–Nam là huyết mạch quốc gia. Áp lực vận tải tăng theo đô thị hóa. Chi phí và rủi ro kỹ thuật sẽ chỉ tăng theo thời gian. Các nước lân cận đã và đang triển khai.</p>
+                </div>
+                <div class="p-4 bg-amber-500/5 rounded-2xl border border-amber-500/15">
+                    <p class="text-xs font-bold text-amber-400 uppercase tracking-widest mb-2 font-mono">4 điều kiện bắt buộc</p>
+                    <ul class="text-slate-300 text-sm space-y-1.5">
+                        <li>① Minh bạch tài chính &amp; stress test</li>
+                        <li>② Cam kết giá vé tiếp cận được</li>
+                        <li>③ Bảo đảm quyền lợi người tái định cư</li>
+                        <li>④ Lộ trình chuyển đổi cho hàng không</li>
+                    </ul>
+                </div>
+                <div class="p-4 bg-blue-500/5 rounded-2xl border border-blue-500/15">
+                    <p class="text-xs font-bold text-blue-400 uppercase tracking-widest mb-2 font-mono">Tầm nhìn hàng không</p>
+                    <p class="text-slate-300 text-sm leading-relaxed">Không nhỏ hơn khi ĐSCT vận hành — mà lớn hơn theo hướng khác: quốc tế hóa, cao cấp hóa, cargo. Hãng nào chủ động tái cơ cấu sớm sẽ ra khỏi giai đoạn này mạnh hơn trước.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6 mb-12 text-left">
+            <div class="ios-glass p-7 rounded-3xl border-l-4 border-l-forest-neon">
+                <h5 class="text-forest-neon font-bold text-base uppercase tracking-widest mb-4 font-mono">Gửi Bộ GTVT &amp; Bộ Tài Chính</h5>
+                <p class="text-slate-300 leading-relaxed text-sm mb-3">Chúng tôi ủng hộ phát triển hạ tầng quốc gia. Điều chúng tôi đề nghị là sự minh bạch về chi phí, công bằng về chính sách, và lộ trình đủ dài để ngành hàng không thích nghi — không phải bảo hộ, mà là tháo dây trói.</p>
+                <p class="text-slate-400 text-xs italic">Lịch sử sẽ ghi nhận quý vị là người gác cổng ngân sách quốc gia cho 30 năm tới.</p>
+            </div>
+            <div class="ios-glass p-7 rounded-3xl border-l-4 border-l-amber-500">
+                <h5 class="text-amber-400 font-bold text-base uppercase tracking-widest mb-4 font-mono">Gửi Báo chí &amp; Xã hội</h5>
+                <p class="text-slate-300 leading-relaxed text-sm mb-3">Dự án ĐSCT không giết chết hàng không — nhưng buộc hàng không phải trở nên tốt hơn hoặc chấp nhận bị thu hẹp. Bài học từ Trung Quốc, Nhật Bản, và châu Âu đều chỉ về cùng một hướng đó.</p>
+                <p class="text-slate-400 text-xs italic">Nhiệm vụ của báo chí: đặt câu hỏi mà quyền lực ngại trả lời — ai chịu trách nhiệm nếu dự báo sai?</p>
+            </div>
+        </div>
+
+        <p class="text-xl md:text-2xl text-white font-serif italic leading-relaxed max-w-4xl mx-auto mb-12 border-t border-b border-white/10 py-8">
+            "Một đất nước tiến bộ không chỉ là đất nước dám xây những công trình lớn — mà còn là đất nước biết đặt câu hỏi đúng trước khi ký tên: Chúng ta đang phục vụ ai? Và ai sẽ trả giá nếu điều này không như kỳ vọng?"
+        </p>
+
+        <!-- Summary badges -->
+        <div class="flex flex-wrap justify-center gap-3">
+            <span class="badge-rank badge-vn"><i class="fa-solid fa-check mr-1"></i> Ủng hộ có điều kiện</span>
+            <span class="badge-rank badge-mid"><i class="fa-solid fa-scale-balanced mr-1"></i> Yêu cầu công bằng cạnh tranh</span>
+            <span class="badge-rank badge-high"><i class="fa-solid fa-plane mr-1"></i> Chiến lược tự chuyển đổi</span>
+            <span class="badge-rank badge-top"><i class="fa-solid fa-handshake mr-1"></i> Đề xuất cộng sinh Air-Rail</span>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="bg-black py-12 text-center border-t border-white/5">
+    <div class="flex justify-center items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-full bg-forest-neon flex items-center justify-center"><i class="fa-solid fa-plane-up text-forest-dark text-lg"></i></div>
+        <span class="font-serif font-bold text-2xl text-white">Aero<span class="text-forest-neon">View</span></span>
+    </div>
+    <p class="text-slate-400 font-medium text-sm mb-1">Góc Nhìn Đa Chiều — Dự Án ĐSCT Bắc–Nam</p>
+    <p class="text-xs text-slate-600">Đại diện: Hiệp hội Hàng không Việt Nam · Tài liệu phục vụ mục đích học thuật môn Chính sách Công</p>
+</footer>
+
+<!-- MODALS -->
+<div id="logModal" class="modal-overlay" onclick="closeModal(event,'logModal')">
+    <div class="modal-content ios-glass p-8 rounded-3xl max-w-md w-full border border-white/20 mx-4" onclick="event.stopPropagation()">
+        <div class="flex justify-between items-center mb-5 border-b border-white/10 pb-4">
+            <h3 class="text-xl font-bold text-white font-serif"><i class="fa-solid fa-circle-info text-moon-glow mr-2"></i> Ước tính chi phí vòng đời</h3>
+            <button onclick="closeModalDirect('logModal')" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/20 transition-colors"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <p class="text-slate-300 text-sm leading-relaxed mb-4">Con số 67,34 tỷ USD là vốn đầu tư xây dựng ban đầu. Theo kinh nghiệm quốc tế, chi phí vòng đời (Life-cycle cost) trong 50 năm thường cao gấp 2–2,5 lần. Đây là ước tính — không phải con số chính thức của dự án.</p>
+        <ul class="text-slate-300 text-sm mb-6 space-y-2">
+            <li class="flex gap-2"><i class="fa-solid fa-circle text-forest-neon text-xs mt-1.5"></i><span>Chi phí bảo dưỡng toa xe, đường ray, tín hiệu</span></li>
+            <li class="flex gap-2"><i class="fa-solid fa-circle text-forest-neon text-xs mt-1.5"></i><span>Chi phí điện năng vận hành liên tục</span></li>
+            <li class="flex gap-2"><i class="fa-solid fa-circle text-amber-400 text-xs mt-1.5"></i><span>Lãi vay tích lũy trong 12 năm xây dựng</span></li>
+            <li class="flex gap-2"><i class="fa-solid fa-circle text-red-400 text-xs mt-1.5"></i><span>Rủi ro đội vốn (kinh nghiệm quốc tế: 15–30%)</span></li>
+        </ul>
+        <button onclick="closeModalDirect('logModal')" class="w-full bg-moon-glow/20 text-moon-glow font-bold py-3 rounded-xl border border-moon-glow/30 hover:bg-moon-glow hover:text-black transition-colors">Đã hiểu</button>
+    </div>
+</div>
+
+<script>
+// Tab switching
+function switchTab(id, btn){
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    btn.classList.add('active');
+}
+
+// Modal
+function openModal(id){document.getElementById(id).classList.add('active');document.body.style.overflow='hidden';}
+function closeModal(e,id){if(e.target.id===id)closeModalDirect(id);}
+function closeModalDirect(id){document.getElementById(id).classList.remove('active');document.body.style.overflow='auto';}
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Intro overlay
+    setTimeout(() => {
+        const o = document.getElementById('intro-overlay');
+        if(o){o.style.opacity='0'; setTimeout(()=>o.style.display='none',2000);}
+    }, 500);
+
+    // Parallax
+    const hero = document.getElementById('hero-parallax');
+    const layers = document.querySelectorAll('.parallax-layer');
+    if(hero){
+        hero.addEventListener('mousemove', e => {
+            const x = (window.innerWidth/2 - e.pageX)/50;
+            layers.forEach(l => {
+                const s = parseFloat(l.getAttribute('data-speed')), tx = x*s*100;
+                const b = l.classList.contains('layer-bg')?'translateZ(-400px) scale(1.5)':l.classList.contains('layer-mid')?'translateZ(-200px) scale(1.2)':'translateZ(0) scale(1)';
+                l.style.transform = `${b} translateX(${tx}px)`;
+            });
+        });
+        hero.addEventListener('mouseleave', () => {
+            layers.forEach(l => {
+                const b = l.classList.contains('layer-bg')?'translateZ(-400px) scale(1.5)':l.classList.contains('layer-mid')?'translateZ(-200px) scale(1.2)':'translateZ(0) scale(1)';
+                l.style.transform = b;
+            });
+        });
+    }
+
+    // Fireflies
+    const fc = document.getElementById('fireflies-container');
+    function makeFF(){
+        if(!fc)return;
+        const f=document.createElement('div'); f.classList.add('firefly');
+        const sz=Math.random()*4+2; f.style.width=sz+'px'; f.style.height=sz+'px';
+        f.style.left=Math.random()*100+'vw'; f.style.top=(Math.random()*80+20)+'vh';
+        f.style.animationDuration=(Math.random()*4+4)+'s'; f.style.animationName='firefly';
+        fc.appendChild(f); setTimeout(()=>f.remove(),8000);
+    }
+    setInterval(makeFF,400); for(let i=0;i<15;i++) makeFF();
+
+    // Scroll progress
+    window.addEventListener('scroll', () => {
+        const ws=document.body.scrollTop||document.documentElement.scrollTop;
+        const h=document.documentElement.scrollHeight-document.documentElement.clientHeight;
+        document.getElementById('scroll-progress').style.width=(ws/h*100)+'%';
+        const nav=document.getElementById('navbar');
+        nav.classList.toggle('py-3', ws>50); nav.classList.toggle('py-6', ws<=50);
+    });
+
+    // Counter
+    const eOut = x => x===1?1:1-Math.pow(2,-10*x);
+    function countUp(el){
+        const t=parseFloat(el.getAttribute('data-target')), dur=2500, start=performance.now();
+        const upd = now => {
+            const p=Math.min((now-start)/dur,1), cur=t*eOut(p);
+            el.innerText=cur.toLocaleString('vi-VN',{minimumFractionDigits:1,maximumFractionDigits:1});
+            if(p<1) requestAnimationFrame(upd);
+        }; requestAnimationFrame(upd);
+    }
+
+    // IntersectionObserver
+    const obs = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+            if(e.isIntersecting){
+                e.target.classList.add('active');
+                e.target.querySelectorAll('.counter').forEach(c=>{if(!c.classList.contains('counted')){countUp(c);c.classList.add('counted');}});
+                obs.unobserve(e.target);
+            }
+        });
+    },{threshold:0.1,rootMargin:'0px 0px -50px 0px'});
+    document.querySelectorAll('.reveal-node').forEach(el=>obs.observe(el));
+
+    // Progress bars animation
+    const pbObs = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+            if(e.isIntersecting){
+                e.target.querySelectorAll('.progress-fill').forEach(b=>{const w=b.style.width;b.style.width='0';setTimeout(()=>b.style.width=w,100);});
+                pbObs.unobserve(e.target);
+            }
+        });
+    },{threshold:0.3});
+    document.querySelectorAll('.ios-glass').forEach(el=>pbObs.observe(el));
+
+    // Charts
+    if(typeof Chart !== 'undefined'){
+        Chart.defaults.font.family = "'-apple-system','BlinkMacSystemFont','Segoe UI',sans-serif";
+        Chart.defaults.color = '#94a3b8';
+        const anim={duration:2000,easing:'easeOutQuart'};
+        const grid={color:'rgba(255,255,255,0.05)'};
+        const tip={backgroundColor:'rgba(15,23,42,0.9)',titleColor:'#fff',bodyColor:'#e2e8f0',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,padding:14,cornerRadius:10};
+
+        // Chart 1: Cost lifecycle Bar
+        const cs = document.getElementById('sectorChart');
+        if(cs) new Chart(cs, {type:'bar',data:{
+            labels:['Xây dựng ban đầu', 'Vận hành 50N', 'Bảo trì hạ tầng', 'Đội vốn (~25%)', 'Lãi vay (12N)', 'Tái định cư'],
+            datasets:[{label:'Tỷ USD (ước tính)',data:[67.3, 35, 17.5, 16.5, 12.5, 6.5],
+                backgroundColor:['#34d399','rgba(96,165,250,0.6)','rgba(100,148,255,0.5)','rgba(248,113,113,0.6)','#fef08a','rgba(255,255,255,0.12)'],
+                borderRadius:8,borderWidth:1,borderColor:'rgba(255,255,255,0.1)'}]
+        },options:{animation:anim,responsive:true,maintainAspectRatio:false,
+            plugins:{legend:{display:false},tooltip:{...tip,callbacks:{label:c=>`${c.dataset.label}: ${c.raw} tỷ USD`}}},
+            scales:{y:{grid,border:{display:false},ticks:{callback:v=>v+' Tỷ'}},x:{grid:{display:false},border:{display:false}}}}});
+
+        // Chart 2: Ticket prices Bar
+        const cg = document.getElementById('growthChart');
+        if(cg){
+            new Chart(cg,{type:'bar',data:{
+                labels:['ĐSCT Hạng 1', 'ĐSCT Hạng 2', 'ĐSCT Hạng 3', 'Máy bay giá rẻ\n(đặt trước sớm)'],
+                datasets:[{label:'Giá vé (Triệu VNĐ)',data:[6.9, 2.9, 1.7, 0.6],
+                    backgroundColor:['rgba(248,113,113,0.5)','rgba(251,191,36,0.5)','rgba(96,165,250,0.6)','#34d399'],
+                    borderRadius:6, borderWidth:1, borderColor:'rgba(255,255,255,0.2)'}]
+            },options:{animation:anim,responsive:true,maintainAspectRatio:false,
+                plugins:{legend:{display:false},tooltip:{...tip,callbacks:{label:c=>`${c.raw} triệu đồng`}}},
+                scales:{y:{grid,border:{display:false},ticks:{callback:v=>v+' Tr'}},x:{grid:{display:false},border:{display:false}}}}});
+        }
+
+        // Chart 3: Indo vs VN comparison
+        const ci = document.getElementById('intlChart');
+        if(ci){
+            new Chart(ci,{type:'bar',data:{
+                labels:['Chiều dài (km)', 'Vốn Đầu Tư (Tỷ USD)'],
+                datasets:[
+                    {label:'Whoosh (Indonesia)', data:[140, 7.2], backgroundColor:'rgba(248,113,113,0.6)', borderRadius:4},
+                    {label:'ĐSCT Bắc–Nam (Việt Nam)', data:[1541, 67.34], backgroundColor:'#34d399', borderRadius:4}
+                ]
+            },options:{indexAxis:'y',animation:anim,responsive:true,maintainAspectRatio:false,
+                plugins:{legend:{position:'top', labels:{color:'#fff',padding:16}},tooltip:{...tip}},
+                scales:{x:{type:'logarithmic',grid,border:{display:false},ticks:{color:'#64748b'}},y:{grid:{display:false},border:{display:false}}}}});
+        }
+    }
+});
+</script>
+</body>
+</html>
